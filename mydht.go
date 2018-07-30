@@ -156,6 +156,18 @@ func (n *MyNode) ReceiveData(data map[string]string, reply *bool) error {
 	return nil
 }
 
+// CheckData : check if some data shoule be sent
+func (n *MyNode) CheckData(nodeAddr string, reply *map[string]string) error {
+	for key, val := range n.Data {
+		if between(HashString(nodeAddr), HashString(key), HashString(n.nodeAddr()), true){
+			continue
+		}
+		(*reply)[key] = val
+		delete(n.Data, key)
+	}
+	return nil
+}
+
 // CheckFail : check if n fails
 func (n *MyNode) CheckFail(arg int, reply *bool) error {
 	*reply = true
@@ -431,7 +443,7 @@ func (n *MyNode) checkPredecessor() {
 
 // StabalizePeriodically : run stablize() per second
 func (n *MyNode) stabalizePeriodically(m *sync.Mutex) {
-	ticker := time.Tick(1 * time.Second)
+	ticker := time.Tick(50 * time.Millisecond)
 	for {
 		select {
 		case <-ticker:
@@ -444,7 +456,7 @@ func (n *MyNode) stabalizePeriodically(m *sync.Mutex) {
 
 // CheckPredecessorPeriodically : run checkPredecessor() per second
 func (n *MyNode) checkPredecessorPeriodically(m *sync.Mutex) {
-	ticker := time.Tick(1 * time.Second)
+	ticker := time.Tick(50 * time.Millisecond)
 	for {
 		select {
 		case <-ticker:
@@ -457,7 +469,7 @@ func (n *MyNode) checkPredecessorPeriodically(m *sync.Mutex) {
 
 // FixFingersPeriodically : run FixFingers() per 0.1 second
 func (n *MyNode) fixFingersPeriodically(m *sync.Mutex) {
-	ticker := time.Tick(60 * time.Millisecond)
+	ticker := time.Tick(50 * time.Millisecond)
 	for {
 		select {
 		case <-ticker:
