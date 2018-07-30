@@ -1,4 +1,4 @@
-package main
+package dhtchord
 
 import (
 	"bufio"
@@ -16,30 +16,33 @@ import (
 	"time"
 )
 
+// Chord : implement
+type Chord struct {
+	nP   *mydht.MyNode
+	sP   *mydht.MyServer
+	port string
+}
 
-var nP *mydht.MyNode
-var sP *mydht.MyServer
-var port = "3410"
-
-func localaddr() string {
-	return fmt.Sprintf("%v:%v", nP.Addr, nP.Port)
+// Localaddr : addr
+func (C *Chord) Localaddr() string {
+	return fmt.Sprintf("%v:%v", C.nP.Addr, C.nP.Port)
 }
 
 // NewCli start
-func NewCli() {
-	nP = mydht.NewNode(port)
-	sP = mydht.NewServer(nP)
+func (C *Chord) NewCli() {
+	C.nP = mydht.NewNode(C.port)
+	C.sP = mydht.NewServer(C.nP)
 
 	//listen
-	rpc.Register(nP)
+	rpc.Register(C.nP)
 	rpc.HandleHTTP()
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%v", nP.Port))
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%v", C.nP.Port))
 	if err != nil {
 		log.Fatal("fail to create a server: listen error", err)
 	}
-	mydht.Start(nP)
-	sP.Listener = lis
-	sP.IsListening = true
+	mydht.Start(C.nP)
+	C.sP.Listener = lis
+	C.sP.IsListening = true
 	go http.Serve(lis, nil)
 }
 
@@ -52,7 +55,7 @@ func fetchInput() ([]string, error) {
 	return []string{}, err
 }
 
-func helpCommand(input ...string) error {
+func (C *Chord) helpCommand(input ...string) error {
 	fmt.Println(`Commands:
 main commands:
 	port <n> : set the port that this node should listen on
@@ -73,70 +76,75 @@ commands for debug:
 	return nil
 }
 
-func portCommand(input ...string) error {
-	if nP != nil || sP != nil {
+// PortCommand : change port
+func (C *Chord) PortCommand(input ...string) error {
+	if C.nP != nil || C.sP != nil {
 		return errors.New("a ring has already been created or joined")
 	}
 	if len(input) == 0 {
 		return errors.New("lack parameter")
 	}
-	port = input[0]
-	fmt.Printf("port has been set to %v\n", port)
+	C.port = input[0]
+	//fmt.Printf("port has been set to %v\n", C.port)
 	return nil
 }
 
-func createCommand(input ...string) error {
-	if nP != nil || sP != nil {
+// CreateCommand : create : create a new ring
+func (C *Chord) CreateCommand(input ...string) error {
+	if C.nP != nil || C.sP != nil {
 		return errors.New("a ring has already been created or joined")
 	}
-	NewCli()
-	fmt.Printf("a ring successfully creates containing a node at address %v:%v\n", nP.Addr, nP.Port)
+	C.NewCli()
+	fmt.Printf("a ring successfully creates containing a node at address %v:%v\n", C.nP.Addr, C.nP.Port)
 	return nil
 }
 
-func joinCommand(input ...string) error {
-	if nP != nil || sP != nil {
+// JoinCommand : join <address> : join an existing ring with a node at <address>
+func (C *Chord) JoinCommand(input ...string) error {
+	if C.nP != nil || C.sP != nil {
 		return errors.New("a ring has already been created or joined")
 	}
-	NewCli()
-	err := mydht.Join(nP, input[0])
+	C.NewCli()
+	err := mydht.Join(C.nP, input[0])
 	if err != nil {
 		return err
 	}
-	fmt.Printf("join a ring containing a node at address %v\n", input[0])
+	fmt.Printf("%v join a ring containing a node at address %v\n", C.nodeAddr(), input[0])
 	return nil
 }
 
-func nodeAddr() string {
-	return fmt.Sprintf("%v:%v", nP.Addr, nP.Port)
+func (C *Chord) nodeAddr() string {
+	return fmt.Sprintf("%v:%v", C.nP.Addr, C.nP.Port)
 }
 
-func quitCommand(input ...string) error {
-	err := mydht.RPCCheckFail(nP.Successor[0])
+// QuitCommand : quit : shut down
+func (C *Chord) QuitCommand(input ...string) error {
+	err := mydht.RPCCheckFail(C.nP.Successor[0])
 	if err != nil {
 		time.Sleep(time.Second)
 	}
-	if nodeAddr() == nP.Successor[0] {
+	if C.nodeAddr() == C.nP.Successor[0] {
 		fmt.Println("cannot reserve data : no succcessor")
-		sP.Listener.Close()
+		C.sP.Listener.Close()
 		os.Exit(1)
 		return nil
 	}
-	err = mydht.RPCReceiveData(nP.Successor[0], nP.Data)
+	err = mydht.RPCReceiveData(C.nP.Successor[0], C.nP.Data)
 	if err != nil {
 		fmt.Println(err)
-		sP.Listener.Close()
+		C.sP.Listener.Close()
 		os.Exit(1)
 		return nil
 	}
-	sP.Listener.Close()
+	C.sP.Listener.Close()
 	os.Exit(1)
 	return nil
 }
 
-func getCommand(input ...string) error {
+// GetCommand : get <key> : find the given key in the currently active ring
+func (C *Chord) GetCommand(input ...string) error {
 	var nodeAddr string
-	err := nP.FindSuccessor(mydht.HashString(input[0]), &nodeAddr)
+	err := C.nP.FindSuccessor(mydht.HashString(input[0]), &nodeAddr)
 	if err != nil {
 		return err
 	}
@@ -157,11 +165,12 @@ func getCommand(input ...string) error {
 	return nil
 }
 
-func putCommand(input ...string) error {
+// PutCommand : put <key> <value> : insert the given key and value into the ring
+func (C *Chord) PutCommand(input ...string) error {
 	//fmt.Println("start put")
 	//fmt.Printf("node %v\n", nP.NodeAddr())
 	var nodeAddr string
-	err := nP.FindSuccessor(mydht.HashString(input[0]), &nodeAddr)
+	err := C.nP.FindSuccessor(mydht.HashString(input[0]), &nodeAddr)
 	if err != nil {
 		return err
 	}
@@ -187,7 +196,8 @@ func putCommand(input ...string) error {
 	return nil
 }
 
-func getRandomString(l int) string {
+// GetRandomString : work as the name
+func GetRandomString(l int) string {
 	str := "0123456789abcdefghijklmnopqrstuvwxyz"
 	bytes := []byte(str)
 	result := []byte{}
@@ -198,7 +208,7 @@ func getRandomString(l int) string {
 	return string(result)
 }
 
-func putrandomCommand(input ...string) error {
+func (C *Chord) putrandomCommand(input ...string) error {
 	n, err := strconv.Atoi(input[0])
 	var cnt = n
 	if err != nil {
@@ -206,9 +216,9 @@ func putrandomCommand(input ...string) error {
 	}
 	for n > 0 {
 		n--
-		key := getRandomString(5)
-		val := getRandomString(5)
-		err := putCommand(key, val)
+		key := GetRandomString(5)
+		val := GetRandomString(5)
+		err := C.PutCommand(key, val)
 		if err != nil {
 			cnt--
 			println(err)
@@ -218,9 +228,10 @@ func putrandomCommand(input ...string) error {
 	return nil
 }
 
-func deleteCommand(input ...string) error {
+// DeleteCommand : delete <key> : the peer deletes it from the ring.
+func (C *Chord) DeleteCommand(input ...string) error {
 	var nodeAddr string
-	err := nP.FindSuccessor(mydht.HashString(input[0]), &nodeAddr)
+	err := C.nP.FindSuccessor(mydht.HashString(input[0]), &nodeAddr)
 	if err != nil {
 		return err
 	}
@@ -241,11 +252,12 @@ func deleteCommand(input ...string) error {
 	return nil
 }
 
-func dumpCommand(input ...string) error {
+func (C *Chord) dumpCommand(input ...string) error {
 	arg, reply := 1, false
-	return nP.Dump(arg, &reply)
+	return C.nP.Dump(arg, &reply)
 }
 
+/*
 var commandLine = map[string]func(input ...string) error{
 	"help":      helpCommand,
 	"join":      joinCommand,
@@ -257,10 +269,11 @@ var commandLine = map[string]func(input ...string) error{
 	"putrandom": putrandomCommand,
 	"delete":    deleteCommand,
 	"dump":      dumpCommand,
-}
+}*/
 
+/*
 func main() {
-	fmt.Println(`Welcome to yzh's dht. 
+	fmt.Println(`Welcome to yzh's dht.
 You can do whatever you want as long as your commands conform to the format.
 type "help" for further information.`)
 
@@ -281,4 +294,4 @@ type "help" for further information.`)
 		}
 
 	}
-}
+}*/
