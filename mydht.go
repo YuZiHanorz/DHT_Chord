@@ -108,7 +108,7 @@ func (n *MyNode) closestPrecedingNode(id *big.Int) string {
 			return n.FingerTable[i]
 		}
 	}
-	for i := 5; i >= 0; i-- {
+	for i := 4; i >= 0; i-- {
 		if between(n.ID, HashString(n.Successor[i]), id, false) {
 			return n.Successor[i]
 		}
