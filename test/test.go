@@ -60,6 +60,7 @@ func test1() {
 	}
 	//}
 	//fmt.Println(cnt)
+	fmt.Printf("\n\n")
 	if cnt == 0 {
 		fmt.Println("Put_Get_test pass")
 	} else {
@@ -102,6 +103,7 @@ func test2() {
 	}
 
 	//fmt.Println(cnt)
+	fmt.Printf("\n\n")
 	if cnt == 0 {
 		fmt.Println("Quit_Get_test pass")
 	} else {
@@ -109,8 +111,45 @@ func test2() {
 	}
 }
 
+func test3() {
+
+	for i := 1; i < 50; i += 5 {
+		cho[i].JoinCommand(cho[3].Localaddr())
+	}
+
+	time.Sleep(5 * time.Second)
+
+	for j := 0; j < 1500; j++ {
+		a := rand.Intn(50)
+		val, _ := cho[a].GetCommand(key[j])
+		if val != value[j] {
+			k := 0
+			for ; k < 5; k++ {
+				time.Sleep(2 * time.Second)
+				val, _ = cho[a].GetCommand(key[j])
+				if val == value[j] {
+					break
+				}
+			}
+			if k == 5 {
+				fmt.Println(cho[a].Localaddr(), " ", key[j], " ", val)
+				cnt++
+			}
+		}
+	}
+	fmt.Printf("\n\n")
+	if cnt == 0 {
+		fmt.Println("join_Get_test pass")
+	} else {
+		fmt.Println("join_Get_test fail")
+	}
+}
+
 func main() {
 	test1()
-	fmt.Printf("\nlalalallalalalallalalalallalala\n\n")
+	fmt.Printf("\n\n")
 	test2()
+	fmt.Printf("\n\n")
+	test3()
+	fmt.Printf("\n\n")
 }
