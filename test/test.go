@@ -28,7 +28,7 @@ func test1() {
 		cho[i].PortCommand(p)
 		cho[i].JoinCommand(cho[0].Localaddr())
 	}
-	time.Sleep(5 * time.Second)
+	time.Sleep(2 * time.Second)
 
 	/*for i := 0; i < 50; i++{
 		cho[i].DumpCommand()
@@ -75,7 +75,7 @@ func test2() {
 	for i := 1; i < 50; i += 5 {
 		cho[i].QuitCommand()
 	}
-	time.Sleep(5 * time.Second)
+	time.Sleep(2 * time.Second)
 	/*for i := 0; i < 50; i++ {
 		if i%5 == 1 {
 			continue
@@ -117,7 +117,7 @@ func test3() {
 		cho[i].JoinCommand(cho[3].Localaddr())
 	}
 
-	time.Sleep(5 * time.Second)
+	time.Sleep(2 * time.Second)
 
 	for j := 0; j < 1500; j++ {
 		a := rand.Intn(50)
@@ -145,11 +145,54 @@ func test3() {
 	}
 }
 
+func test4() {
+	for j := 0; j < 1500; j += 20 {
+		a := rand.Intn(50)
+		cho[a].DeleteCommand(key[j])
+	}
+	time.Sleep(2 * time.Second)
+	for j := 0; j < 1500; j++ {
+		a := rand.Intn(50)
+		val, _ := cho[a].GetCommand(key[j])
+		if j%20 == 0 {
+			if val == "" {
+				fmt.Println("true")
+			} else {
+				fmt.Println("false")
+				cnt++
+			}
+			continue
+		}
+		if val != value[j] {
+			k := 0
+			for ; k < 5; k++ {
+				time.Sleep(2 * time.Second)
+				val, _ = cho[a].GetCommand(key[j])
+				if val == value[j] {
+					break
+				}
+			}
+			if k == 5 {
+				fmt.Println(cho[a].Localaddr(), " ", key[j], " ", val)
+				cnt++
+			}
+		}
+	}
+	fmt.Printf("\n\n")
+	if cnt == 0 {
+		fmt.Println("Delete_Get_test pass")
+	} else {
+		fmt.Println("Delete_Get_test fail")
+	}
+}
+
 func main() {
 	test1()
 	fmt.Printf("\n\n")
 	test2()
 	fmt.Printf("\n\n")
 	test3()
+	fmt.Printf("\n\n")
+	test4()
 	fmt.Printf("\n\n")
 }
