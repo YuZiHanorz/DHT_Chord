@@ -137,6 +137,8 @@ func (C *Chord) QuitCommand(input ...string) error {
 		C.listener.Close()
 		C.nP.Closed = true
 		fmt.Printf("%v quit\n", C.nodeAddr())
+		C.nP = nil
+		C.sP = nil
 		return nil
 	}
 	//fmt.Println(C.nodeAddr(), " ", C.nP.Successor[0])
@@ -146,11 +148,15 @@ func (C *Chord) QuitCommand(input ...string) error {
 		C.listener.Close()
 		C.nP.Closed = true
 		fmt.Printf("%v quit\n", C.nodeAddr())
+		C.nP = nil
+		C.sP = nil
 		return nil
 	}
 	C.listener.Close()
 	C.nP.Closed = true
 	fmt.Printf("%v quit\n", C.nodeAddr())
+	C.nP = nil
+	C.sP = nil
 	return nil
 }
 
