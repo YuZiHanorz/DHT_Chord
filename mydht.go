@@ -262,8 +262,7 @@ ID: %v
 Successor: %v
 Predecessor: %v
 Data: %v
-Fingers: %v
-`, n.nodeAddr(), n.ID, n.Successor, n.Predecessor, n.Data, n.FingerTable)
+`, n.nodeAddr(), n.ID, n.Successor, n.Predecessor, n.Data)
 	return nil
 }
 
@@ -588,7 +587,7 @@ func (n *MyNode) checkPredecessor() {
 // StabalizePeriodically : run stablize() per second
 func (n *MyNode) stabalizePeriodically() {
 
-	ticker := time.Tick(1000 * time.Millisecond)
+	ticker := time.Tick(500 * time.Millisecond)
 	for {
 		if n.Closed == true {
 			return
@@ -603,7 +602,7 @@ func (n *MyNode) stabalizePeriodically() {
 // CheckPredecessorPeriodically : run checkPredecessor() per second
 func (n *MyNode) checkPredecessorPeriodically() {
 
-	ticker := time.Tick(1000 * time.Millisecond)
+	ticker := time.Tick(500 * time.Millisecond)
 	for {
 		if n.Closed == true {
 			return
@@ -618,7 +617,7 @@ func (n *MyNode) checkPredecessorPeriodically() {
 // FixFingersPeriodically : run FixFingers() per 0.1 second
 func (n *MyNode) fixFingersPeriodically() {
 
-	ticker := time.Tick(1000 * time.Millisecond)
+	ticker := time.Tick(500 * time.Millisecond)
 	for {
 		if n.Closed == true {
 			return
