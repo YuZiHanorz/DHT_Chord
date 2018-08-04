@@ -2,197 +2,136 @@ package main
 
 import (
 	"fmt"
-	"math/rand"
 	"myDHT/cli"
 	"strconv"
 	"time"
 )
 
 var cnt int
-var cho [50]dhtchord.Chord
-var key [1500]string
-var value [1500]string
+var cho [56]dhtchord.Chord
+var tmp int
 
-func test1() {
+func test() {
 	//test1
+	m := make(map[string]string)
 
-	for i := 0; i < 1500; i++ {
-		key[i] = dhtchord.GetRandomString(15)
-		value[i] = dhtchord.GetRandomString(5)
-		fmt.Printf("<%v, %v>\n", key[i], value[i])
-	}
 	cho[0].CreateCommand()
-	for i := 1; i < 50; i++ {
-		port := 3410 + i
-		p := strconv.Itoa(port)
-		cho[i].PortCommand(p)
-		cho[i].JoinCommand(cho[0].Localaddr())
-	}
-	time.Sleep(2 * time.Second)
 
-	/*for i := 0; i < 50; i++{
-		cho[i].DumpCommand()
-	}*/
+	for loop := 0; loop < 5; loop++ {
+		for i := 1; i <= 15; i++ {
+			tmp = i + loop*10
+			port := 3410 + tmp
+			p := strconv.Itoa(port)
+			cho[tmp].PortCommand(p)
+			cho[tmp].JoinCommand(cho[0].Localaddr())
+			time.Sleep(1 * time.Second)
+		}
 
-	for i := 0; i < 1500; i++ {
-		a := rand.Intn(50)
-		cho[a].PutCommand(key[i], value[i])
-	}
+		for i := 0; i < 300; i++ {
+			key := dhtchord.GetRandomString(20)
+			value := dhtchord.GetRandomString(5)
+			cho[0].PutCommand(key, value)
+			m[key] = value
+		}
 
-	//for i := 0; i < 1500; i++ {
-	for j := 0; j < 1500; j++ {
-		a := rand.Intn(50)
-		val, _ := cho[a].GetCommand(key[j])
-		if val != value[j] {
-			k := 0
-			for ; k < 5; k++ {
-				time.Sleep(2 * time.Second)
-				val, _ = cho[a].GetCommand(key[j])
-				if val == value[j] {
-					break
+		for i := 0; i <= tmp; i++ {
+			cho[i].DumpCommand()
+		}
+		fmt.Println('\n')
+
+		num := 0
+		for key, val := range m {
+			value, _ := cho[0].GetCommand(key)
+			if value != val {
+				k := 0
+				for ; k < 5; k++ {
+					time.Sleep(500 * time.Millisecond)
+					value, _ = cho[0].GetCommand(key)
+					if value == val {
+						break
+					}
+				}
+				if k == 5 {
+					fmt.Println(value, " ", key, "cannot find")
+					cnt++
 				}
 			}
-			if k == 5 {
-				fmt.Println(cho[a].Localaddr(), " ", key[j], " ", val)
-				cnt++
+			num++
+			if num == 200 {
+				break
+			}
+
+		}
+		num = 0
+		for key := range m {
+			cho[0].DeleteCommand(key)
+			delete(m, key)
+			num++
+			if num == 150 {
+				break
 			}
 		}
-	}
-	//}
-	//fmt.Println(cnt)
-	fmt.Printf("\n\n")
-	if cnt == 0 {
-		fmt.Println("Put_Get_test pass")
-	} else {
-		fmt.Println("Put_Get_test fail")
-	}
 
-}
-
-func test2() {
-	//test2
-
-	for i := 1; i < 50; i += 5 {
-		cho[i].QuitCommand()
-	}
-	time.Sleep(2 * time.Second)
-	/*for i := 0; i < 50; i++ {
-		if i%5 == 1 {
-			continue
+		for i := 11; i <= 15; i++ {
+			tmp = i + loop*10
+			cho[tmp].QuitCommand()
+			time.Sleep(1 * time.Second)
 		}
-		cho[i].DumpCommand()
-	}*/
 
-	for j := 0; j < 1500; j++ {
-		//a := rand.Intn(50)
-		val, _ := cho[0].GetCommand(key[j])
-		if val != value[j] {
-			k := 0
-			for ; k < 5; k++ {
-				time.Sleep(2 * time.Second)
-				val, _ = cho[0].GetCommand(key[j])
-				if val == value[j] {
-					break
+		for i := 0; i < 300; i++ {
+			key := dhtchord.GetRandomString(20)
+			value := dhtchord.GetRandomString(5)
+			cho[0].PutCommand(key, value)
+			m[key] = value
+		}
+
+		for i := 0; i <= tmp-5; i++ {
+			cho[i].DumpCommand()
+		}
+		fmt.Println('\n')
+
+		num = 0
+		for key, val := range m {
+			value, _ := cho[0].GetCommand(key)
+			if value != val {
+				k := 0
+				for ; k < 5; k++ {
+					time.Sleep(500 * time.Millisecond)
+					value, _ = cho[0].GetCommand(key)
+					if value == val {
+						break
+					}
+				}
+				if k == 5 {
+					fmt.Println(value, " ", key, "cannot find")
+					cnt++
 				}
 			}
-			if k == 5 {
-				fmt.Println(key[j], " ", val)
-				cnt++
+			num++
+			if num == 200 {
+				break
+			}
+
+		}
+		num = 0
+		for key := range m {
+			cho[0].DeleteCommand(key)
+			delete(m, key)
+			num++
+			if num == 150 {
+				break
 			}
 		}
-	}
 
-	//fmt.Println(cnt)
-	fmt.Printf("\n\n")
+	}
 	if cnt == 0 {
-		fmt.Println("Quit_Get_test pass")
+		fmt.Printf("\nPass!\n")
 	} else {
-		fmt.Println("Quit_Get_test fail")
-	}
-}
-
-func test3() {
-
-	for i := 1; i < 50; i += 5 {
-		cho[i].JoinCommand(cho[3].Localaddr())
+		fmt.Printf("mistakes: %v, fail", cnt)
 	}
 
-	time.Sleep(2 * time.Second)
-
-	for j := 0; j < 1500; j++ {
-		a := rand.Intn(50)
-		val, _ := cho[a].GetCommand(key[j])
-		if val != value[j] {
-			k := 0
-			for ; k < 5; k++ {
-				time.Sleep(2 * time.Second)
-				val, _ = cho[a].GetCommand(key[j])
-				if val == value[j] {
-					break
-				}
-			}
-			if k == 5 {
-				fmt.Println(cho[a].Localaddr(), " ", key[j], " ", val)
-				cnt++
-			}
-		}
-	}
-	fmt.Printf("\n\n")
-	if cnt == 0 {
-		fmt.Println("join_Get_test pass")
-	} else {
-		fmt.Println("join_Get_test fail")
-	}
-}
-
-func test4() {
-	for j := 0; j < 1500; j += 20 {
-		a := rand.Intn(50)
-		cho[a].DeleteCommand(key[j])
-	}
-	time.Sleep(2 * time.Second)
-	for j := 0; j < 1500; j++ {
-		a := rand.Intn(50)
-		val, _ := cho[a].GetCommand(key[j])
-		if j%20 == 0 {
-			if val == "" {
-				fmt.Println("true")
-			} else {
-				fmt.Println("false")
-				cnt++
-			}
-			continue
-		}
-		if val != value[j] {
-			k := 0
-			for ; k < 5; k++ {
-				time.Sleep(2 * time.Second)
-				val, _ = cho[a].GetCommand(key[j])
-				if val == value[j] {
-					break
-				}
-			}
-			if k == 5 {
-				fmt.Println(cho[a].Localaddr(), " ", key[j], " ", val)
-				cnt++
-			}
-		}
-	}
-	fmt.Printf("\n\n")
-	if cnt == 0 {
-		fmt.Println("Delete_Get_test pass")
-	} else {
-		fmt.Println("Delete_Get_test fail")
-	}
 }
 
 func main() {
-	test1()
-	fmt.Printf("\n\n")
-	test2()
-	fmt.Printf("\n\n")
-	test3()
-	fmt.Printf("\n\n")
-	test4()
-	fmt.Printf("\n\n")
+	test()
 }
