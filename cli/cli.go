@@ -8,8 +8,6 @@ import (
 	"math/rand"
 	"myDHT"
 	"net"
-
-	//"net/http"
 	"net/rpc"
 	"os"
 	"strconv"
@@ -130,7 +128,7 @@ func (C *Chord) nodeAddr() string {
 func (C *Chord) QuitCommand(input ...string) error {
 	err := mydht.RPCCheckFail(C.nP.Successor[0])
 	if err != nil {
-		time.Sleep(time.Second)
+		time.Sleep(1 * time.Second)
 	}
 	if C.nodeAddr() == C.nP.Successor[0] {
 		fmt.Println("cannot reserve data : no succcessor")
@@ -139,17 +137,24 @@ func (C *Chord) QuitCommand(input ...string) error {
 		fmt.Printf("%v quit\n", C.nodeAddr())
 		C.nP = nil
 		C.sP = nil
+		time.Sleep(500 * time.Millisecond)
 		return nil
 	}
 	//fmt.Println(C.nodeAddr(), " ", C.nP.Successor[0])
+	err = mydht.RPCCheckFail(C.nP.Successor[0])
+	for err != nil {
+		time.Sleep(500 * time.Millisecond)
+		err = mydht.RPCCheckFail(C.nP.Successor[0])
+	}
 	err = mydht.RPCReceiveData(C.nP.Successor[0], C.nP.Data)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("here", err)
 		C.listener.Close()
 		C.nP.Closed = true
 		fmt.Printf("%v quit\n", C.nodeAddr())
 		C.nP = nil
 		C.sP = nil
+		time.Sleep(500 * time.Millisecond)
 		return nil
 	}
 	C.listener.Close()
@@ -157,6 +162,7 @@ func (C *Chord) QuitCommand(input ...string) error {
 	fmt.Printf("%v quit\n", C.nodeAddr())
 	C.nP = nil
 	C.sP = nil
+	time.Sleep(500 * time.Millisecond)
 	return nil
 }
 
@@ -164,22 +170,25 @@ func (C *Chord) QuitCommand(input ...string) error {
 func (C *Chord) GetCommand(input ...string) (string, error) {
 	var nodeAddr string
 	err := C.nP.FindSuccessor(mydht.HashString(input[0]), &nodeAddr)
-	if err != nil {
-		time.Sleep(100 * time.Millisecond)
+	for err != nil {
+		time.Sleep(500 * time.Millisecond)
 		err = C.nP.FindSuccessor(mydht.HashString(input[0]), &nodeAddr)
 	}
 	if nodeAddr == "" {
+		fmt.Printf("%v ", nodeAddr)
 		return "", errors.New("fail to find successor of key")
 	}
 	//fmt.Println(nodeAddr)
 	client, err := rpc.Dial("tcp", nodeAddr)
 	if err != nil {
+		fmt.Printf("%v ", nodeAddr)
 		return "", err
 	}
 	defer client.Close()
 	var val string
 	err = client.Call("MyNode.Get", input[0], &val)
 	if err != nil {
+		fmt.Printf("%v ", nodeAddr)
 		return "", err
 	}
 	fmt.Printf("<%v, %v> in node %v\n", input[0], val, nodeAddr)
@@ -192,8 +201,8 @@ func (C *Chord) PutCommand(input ...string) error {
 	//fmt.Printf("node %v\n", nP.NodeAddr())
 	var nodeAddr string
 	err := C.nP.FindSuccessor(mydht.HashString(input[0]), &nodeAddr)
-	if err != nil {
-		time.Sleep(100 * time.Millisecond)
+	for err != nil {
+		time.Sleep(500 * time.Millisecond)
 		err = C.nP.FindSuccessor(mydht.HashString(input[0]), &nodeAddr)
 	}
 	if nodeAddr == "" {
@@ -254,8 +263,8 @@ func (C *Chord) putrandomCommand(input ...string) error {
 func (C *Chord) DeleteCommand(input ...string) error {
 	var nodeAddr string
 	err := C.nP.FindSuccessor(mydht.HashString(input[0]), &nodeAddr)
-	if err != nil {
-		time.Sleep(100 * time.Millisecond)
+	for err != nil {
+		time.Sleep(500 * time.Millisecond)
 		err = C.nP.FindSuccessor(mydht.HashString(input[0]), &nodeAddr)
 	}
 	if nodeAddr == "" {
