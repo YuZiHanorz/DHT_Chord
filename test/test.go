@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"myDHT/cli"
 	"strconv"
-	"time"
 )
 
 var cnt int
@@ -24,7 +23,7 @@ func test() {
 			p := strconv.Itoa(port)
 			cho[tmp].PortCommand(p)
 			cho[tmp].JoinCommand(cho[0].Localaddr())
-			time.Sleep(1 * time.Second)
+			//time.Sleep(1 * time.Second)
 		}
 
 		for i := 0; i < 300; i++ {
@@ -34,27 +33,11 @@ func test() {
 			m[key] = value
 		}
 
-		for i := 0; i <= tmp; i++ {
-			cho[i].DumpCommand()
-		}
-		fmt.Println('\n')
-
 		num := 0
 		for key, val := range m {
 			value, _ := cho[0].GetCommand(key)
 			if value != val {
-				k := 0
-				for ; k < 5; k++ {
-					time.Sleep(500 * time.Millisecond)
-					value, _ = cho[0].GetCommand(key)
-					if value == val {
-						break
-					}
-				}
-				if k == 5 {
-					fmt.Println(value, " ", key, "cannot find")
-					cnt++
-				}
+				cnt++
 			}
 			num++
 			if num == 200 {
@@ -75,7 +58,7 @@ func test() {
 		for i := 11; i <= 15; i++ {
 			tmp = i + loop*10
 			cho[tmp].QuitCommand()
-			time.Sleep(1 * time.Second)
+			//time.Sleep(1 * time.Second)
 		}
 
 		for i := 0; i < 300; i++ {
@@ -85,27 +68,11 @@ func test() {
 			m[key] = value
 		}
 
-		for i := 0; i <= tmp-5; i++ {
-			cho[i].DumpCommand()
-		}
-		fmt.Println('\n')
-
 		num = 0
 		for key, val := range m {
 			value, _ := cho[0].GetCommand(key)
 			if value != val {
-				k := 0
-				for ; k < 5; k++ {
-					time.Sleep(500 * time.Millisecond)
-					value, _ = cho[0].GetCommand(key)
-					if value == val {
-						break
-					}
-				}
-				if k == 5 {
-					fmt.Println(value, " ", key, "cannot find")
-					cnt++
-				}
+				cnt++
 			}
 			num++
 			if num == 200 {
