@@ -116,7 +116,8 @@ func (C *Chord) JoinCommand(input ...string) error {
 		return err
 	}
 	fmt.Printf("%v join a ring with a node at address %v\n", C.nodeAddr(), input[0])
-	//time.Sleep(200 * time.Millisecond)
+	time.Sleep(500 * time.Millisecond)
+
 	return nil
 }
 
