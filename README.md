@@ -1,3 +1,3 @@
 # DHT_Chord
 
-An old implement
+It is a simple implementation of the Distributed Hash Table implemented by Chord using Go, including test file.
